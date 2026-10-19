@@ -1,0 +1,20 @@
+{
+  "name": "backend2_reservas_5elementos",
+  "version": "1.0.0",
+  "description": "API RESTful para la plataforma de reservas de talleres y círculos holísticos 5Elementos",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "mongoose": "^9.11.2"
+  }
+}
