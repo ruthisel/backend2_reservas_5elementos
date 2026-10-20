@@ -1,6 +1,6 @@
 # BACKEND2_RESERVAS_5ELEMENTOS
 
-API RESTful desarrollada con Node.js y Express para la gestión integral de reservas, talleres, encuentros y círculos holísticos. Este proyecto corresponde a la segunda pre-entrega de Backend II, enfocada en la autenticación segura de usuarios, encriptación de credenciales con `bcrypt`, persistencia en MongoDB y manejo robusto de errores mediante una arquitectura por capas desacoplada.
+API RESTful desarrollada con Node.js y Express para la gestión integral de reservas, talleres, encuentros y círculos holísticos. Este proyecto corresponde a la tercera pre-entrega de Backend II, enfocada en la autenticación segura de usuarios mediante JWT almacenado en cookies `HttpOnly`, protección de rutas y persistencia en MongoDB con arquitectura en capas desacoplada.
 
 ---
 
@@ -9,6 +9,8 @@ API RESTful desarrollada con Node.js y Express para la gestión integral de rese
 - **Node.js** (Entorno de ejecución de JavaScript)
 - **Express.js** (Framework web para la creación de APIs REST)
 - **MongoDB** y **Mongoose** (Base de datos NoSQL y ODM)
+- **JSON Web Tokens (JWT)** (Manejo de sesiones sin estado)
+- **cookie-parser** (Procesamiento y gestión de cookies en peticiones HTTP)
 - **bcrypt / bcryptjs** (Cifrado de contraseñas mediante hashing unidireccional)
 - **dotenv** (Manejo de variables de entorno)
 - **ECMAScript Modules (ESM)** (`import` / `export`)
@@ -19,9 +21,10 @@ API RESTful desarrollada con Node.js y Express para la gestión integral de rese
 
 El código está estructurado en capas desacopladas dentro de la carpeta `src/` para garantizar la separación de responsabilidades:
 
+```text
 BACKEND2_RESERVAS_5ELEMENTOS/
 ├── src/
-│   ├── app.js               # Configuración e inicialización de Express y middlewares
+│   ├── app.js               # Configuración e inicialización de Express y middlewares globales
 │   ├── server.js            # Punto de entrada principal (arranque del servidor HTTP)
 │   ├── config/              # Configuración de base de datos y entorno (db.js)
 │   ├── routes/              # Definición de rutas y endpoints
@@ -32,8 +35,8 @@ BACKEND2_RESERVAS_5ELEMENTOS/
 │   ├── repositories/        # Capa de abstracción para el acceso a datos
 │   ├── dao/                 # Data Access Object (Persistencia Mongo/Memoria)
 │   ├── models/              # Schemas de Mongoose (User.js, Event.js)
-│   ├── middlewares/         # Middlewares de validación, errores y autenticación
-│   └── utils/               # Utilidades generales y helpers (hash.js)
+│   ├── middlewares/         # Middlewares de validación y autenticación (auth.middleware.js)
+│   └── utils/               # Utilidades y helpers (jwt.js, hash.js)
 ├── .env.example             # Plantilla de variables de entorno (sin credenciales)
 ├── .gitignore               # Archivos excluidos del control de versiones
 ├── package.json             # Dependencias y scripts del proyecto
