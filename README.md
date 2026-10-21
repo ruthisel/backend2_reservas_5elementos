@@ -13,7 +13,7 @@ API RESTful desarrollada con Node.js y Express para la gestión integral de rese
 - **cookie-parser** (Procesamiento y gestión de cookies en peticiones HTTP)
 - **bcrypt / bcryptjs** (Cifrado de contraseñas mediante hashing unidireccional)
 - **dotenv** (Manejo de variables de entorno)
-- **ECMAScript Modules (ESM)** (`import` / `export`)
+- ECMAScript Modules (ESM) (`import` / `export`)
 
 ---
 
