@@ -1,46 +1,32 @@
 # BACKEND2_RESERVAS_5ELEMENTOS
 
-API RESTful desarrollada con Node.js y Express para la gestión integral de reservas, talleres, encuentros y círculos holísticos. Este proyecto corresponde a la quinta pre-entrega de Backend II, enfocada en la implementación de autorización por roles (RBAC), control de acceso a recursos y gestión de permisos HTTP.
+API RESTful desarrollada con Node.js y Express para la gestión integral de reservas, talleres, encuentros y círculos holísticos. Este proyecto corresponde a la sexta pre-entrega de Backend II, enfocada en el CRUD completo de la entidad `events`, lógica de negocio avanzada, control de permisos por propiedad de recursos, filtrado, paginación y ordenamiento.
 
 ---
 
-## Tecnologías Utilizadas
+## Entidad Eventos y Reglas de Negocio
 
-- **Node.js** & **Express.js**
-- **MongoDB** & **Mongoose**
-- **Passport.js** (Estrategias Local y JWT)
-- **JSON Web Tokens (JWT)** & **cookie-parser**
-- **bcrypt** (Hashing de contraseñas)
+### Modelo de Evento (`Event`)
+- **Atributos:** `title`, `description`, `category`, `date`, `location`, `capacity`, `price`, `status`, `organizer`.
+- **Relaciones:** `organizer` es una referencia (`ObjectId`) al modelo `User`.
+- **Estados Permitidos (`status`):** `draft` (predeterminado), `published`, `cancelled`, `finished`.
 
----
-
-## Matriz de Permisos (RBAC)
-
-| Acción | `user` | `organizer` | `admin` |
-| :--- | :---: | :---: | :---: |
-| Consultar eventos publicados (`GET /api/events`) | ✅ | ✅ | ✅ |
-| Crear eventos (`POST /api/events`) | ❌ | ✅ | ✅ |
-| Modificar eventos propios (`PUT /api/events/:id`) | ❌ | ✅ | ✅ |
-| Modificar cualquier evento (`PUT /api/events/:id`) | ❌ | ❌ | ✅ |
-| Ver todos los usuarios (`GET /api/users`) | ❌ | ❌ | ✅ |
+### Reglas de Negocio (Capa de Servicios)
+- **Fechas:** No se permite crear eventos con fechas pasadas.
+- **Capacidad y Precio:** La capacidad debe ser mayor a 0 y el precio mayor o igual a 0.
+- **Cancelaciones:** Los eventos en estado `cancelled` no pueden ser modificados ni reabiertos.
+- **Propiedad de Recursos:** Los organizadores (`organizer`) solo pueden editar o cambiar el estado de sus propios eventos. El rol `admin` puede modificar cualquier evento.
 
 ---
 
-## Tabla de Rutas y Endpoints Protegidos
+## Tabla de Rutas de Eventos
 
-| Método | Endpoint | Descripción | Roles Permitidos | Código sin Sesión | Código sin Rol |
-| :--- | :--- | :--- | :---: | :---: | :---: |
-| `POST` | `/api/sessions/register` | Registro de usuario (rol predeterminado: `user`) | Público | N/A | N/A |
-| `POST` | `/api/sessions/login` | Autenticación y generación de cookie `currentUser` | Público | N/A | N/A |
-| `GET` | `/api/sessions/current` | Consulta de perfil autenticado | Todos | `401 Unauthorized` | N/A |
-| `POST` | `/api/events` | Creación de un nuevo evento | `organizer`, `admin` | `401 Unauthorized` | `403 Forbidden` |
-| `PUT` | `/api/events/:id` | Modificación de evento | `organizer` (propio), `admin` | `401 Unauthorized` | `403 Forbidden` |
-| `GET` | `/api/users` | Listado administrativo de usuarios | `admin` | `401 Unauthorized` | `403 Forbidden` |
-| `POST` | `/api/sessions/logout` | Cierre de sesión y eliminación de cookie | Todos | N/A | N/A |
+| Método | Endpoint | Acceso Requerido | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/events` | `organizer`, `admin` | Crea un nuevo evento asignando automáticamente el `organizer` desde `req.user`. |
+| `GET` | `/api/events` | Público | Lista eventos publicados con soporte para filtros (`status`, `category`, `location`, rango de fechas), paginación (`page`, `limit`) y ordenamiento (`sort`). |
+| `GET` | `/api/events/:id` | Público | Obtiene el detalle completo de un evento por ID. |
+| `PUT` | `/api/events/:id` | Dueño del evento u `admin` | Modifica los datos de un evento (bloqueado para eventos cancelados). |
+| `PATCH` | `/api/events/:id/status` | Dueño del evento u `admin` | Actualiza el estado del evento (`draft`, `published`, `cancelled`, `finished`). |
 
 ---
-
-## Manejo de Respuestas de Error HTTP
-
-- **`401 Unauthorized`**: El usuario no tiene una sesión activa válida (falta la cookie, el token expiró o la firma de JWT es inválida).
-- **`403 Forbidden`**: El usuario está autenticado correctamente, pero su rol no posee el nivel de acceso requerido para ejecutar la acción solicitada.
