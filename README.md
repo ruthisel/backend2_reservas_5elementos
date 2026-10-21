@@ -1,43 +1,46 @@
 # BACKEND2_RESERVAS_5ELEMENTOS
 
-API RESTful desarrollada con Node.js y Express para la gestión integral de reservas, talleres, encuentros y círculos holísticos. Este proyecto corresponde a la tercera pre-entrega de Backend II, enfocada en la autenticación segura de usuarios mediante JWT almacenado en cookies `HttpOnly`, protección de rutas y persistencia en MongoDB con arquitectura en capas desacoplada.
+API RESTful desarrollada con Node.js y Express para la gestión integral de reservas, talleres, encuentros y círculos holísticos. Este proyecto corresponde a la quinta pre-entrega de Backend II, enfocada en la implementación de autorización por roles (RBAC), control de acceso a recursos y gestión de permisos HTTP.
 
 ---
 
 ## Tecnologías Utilizadas
 
-- **Node.js** (Entorno de ejecución de JavaScript)
-- **Express.js** (Framework web para la creación de APIs REST)
-- **MongoDB** y **Mongoose** (Base de datos NoSQL y ODM)
-- **JSON Web Tokens (JWT)** (Manejo de sesiones sin estado)
-- **cookie-parser** (Procesamiento y gestión de cookies en peticiones HTTP)
-- **bcrypt / bcryptjs** (Cifrado de contraseñas mediante hashing unidireccional)
-- **dotenv** (Manejo de variables de entorno)
-- ECMAScript Modules (ESM) (`import` / `export`)
+- **Node.js** & **Express.js**
+- **MongoDB** & **Mongoose**
+- **Passport.js** (Estrategias Local y JWT)
+- **JSON Web Tokens (JWT)** & **cookie-parser**
+- **bcrypt** (Hashing de contraseñas)
 
 ---
 
-## Estructura del Proyecto
+## Matriz de Permisos (RBAC)
 
-El código está estructurado en capas desacopladas dentro de la carpeta `src/` para garantizar la separación de responsabilidades:
+| Acción | `user` | `organizer` | `admin` |
+| :--- | :---: | :---: | :---: |
+| Consultar eventos publicados (`GET /api/events`) | ✅ | ✅ | ✅ |
+| Crear eventos (`POST /api/events`) | ❌ | ✅ | ✅ |
+| Modificar eventos propios (`PUT /api/events/:id`) | ❌ | ✅ | ✅ |
+| Modificar cualquier evento (`PUT /api/events/:id`) | ❌ | ❌ | ✅ |
+| Ver todos los usuarios (`GET /api/users`) | ❌ | ❌ | ✅ |
 
-```text
-BACKEND2_RESERVAS_5ELEMENTOS/
-├── src/
-│   ├── app.js               # Configuración e inicialización de Express y middlewares globales
-│   ├── server.js            # Punto de entrada principal (arranque del servidor HTTP)
-│   ├── config/              # Configuración de base de datos y entorno (db.js)
-│   ├── routes/              # Definición de rutas y endpoints
-│   │   ├── events.router.js
-│   │   └── sessions.router.js
-│   ├── controllers/         # Manejo de peticiones HTTP (req, res)
-│   ├── services/            # Lógica de negocio de la aplicación
-│   ├── repositories/        # Capa de abstracción para el acceso a datos
-│   ├── dao/                 # Data Access Object (Persistencia Mongo/Memoria)
-│   ├── models/              # Schemas de Mongoose (User.js, Event.js)
-│   ├── middlewares/         # Middlewares de validación y autenticación (auth.middleware.js)
-│   └── utils/               # Utilidades y helpers (jwt.js, hash.js)
-├── .env.example             # Plantilla de variables de entorno (sin credenciales)
-├── .gitignore               # Archivos excluidos del control de versiones
-├── package.json             # Dependencias y scripts del proyecto
-└── README.md                # Documentación general de la plataforma
+---
+
+## Tabla de Rutas y Endpoints Protegidos
+
+| Método | Endpoint | Descripción | Roles Permitidos | Código sin Sesión | Código sin Rol |
+| :--- | :--- | :--- | :---: | :---: | :---: |
+| `POST` | `/api/sessions/register` | Registro de usuario (rol predeterminado: `user`) | Público | N/A | N/A |
+| `POST` | `/api/sessions/login` | Autenticación y generación de cookie `currentUser` | Público | N/A | N/A |
+| `GET` | `/api/sessions/current` | Consulta de perfil autenticado | Todos | `401 Unauthorized` | N/A |
+| `POST` | `/api/events` | Creación de un nuevo evento | `organizer`, `admin` | `401 Unauthorized` | `403 Forbidden` |
+| `PUT` | `/api/events/:id` | Modificación de evento | `organizer` (propio), `admin` | `401 Unauthorized` | `403 Forbidden` |
+| `GET` | `/api/users` | Listado administrativo de usuarios | `admin` | `401 Unauthorized` | `403 Forbidden` |
+| `POST` | `/api/sessions/logout` | Cierre de sesión y eliminación de cookie | Todos | N/A | N/A |
+
+---
+
+## Manejo de Respuestas de Error HTTP
+
+- **`401 Unauthorized`**: El usuario no tiene una sesión activa válida (falta la cookie, el token expiró o la firma de JWT es inválida).
+- **`403 Forbidden`**: El usuario está autenticado correctamente, pero su rol no posee el nivel de acceso requerido para ejecutar la acción solicitada.
