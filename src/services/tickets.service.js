@@ -21,13 +21,18 @@ class TicketsService {
             throw { statusCode: 400, message: 'No es posible inscribirse a un evento no publicado' };
         }
 
-        // 3. Validar inscripciones activas duplicadas del mismo usuario
+        // 3. NUEVA VALIDACIÓN: Rechazar inscripción si el evento ya finalizó (fecha pasada)
+        if (new Date(event.date) < new Date()) {
+            throw { statusCode: 400, message: 'No es posible inscribirse a un evento que ya ha finalizado' };
+        }
+
+        // 4. Validar inscripciones activas duplicadas del mismo usuario
         const existingTicket = await ticketsRepository.findActiveByUserAndEvent(userId, eventId);
         if (existingTicket) {
             throw { statusCode: 409, message: 'Ya posees una inscripción activa para este evento' };
         }
 
-        // 4. Control de cupos disponibles (tickets 'cancelled' no ocupan cupo)
+        // 5. Control de cupos disponibles (tickets 'cancelled' no ocupan cupo)
         const occupiedSpots = await ticketsRepository.countOccupiedSpots(eventId);
         const availableSpots = event.capacity - occupiedSpots;
 
@@ -38,7 +43,7 @@ class TicketsService {
             };
         }
 
-        // 5. Crear ticket y código de reserva
+        // 6. Crear ticket y código de reserva
         const reservationCode = `TCK-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const ticket = await ticketsRepository.create({
             user: userId,
@@ -48,7 +53,7 @@ class TicketsService {
             status: 'confirmed'
         });
 
-        // 6. Notificación por email
+        // 7. Notificación por email
         try {
             await mailService.sendTicketConfirmation(userEmail, {
                 reservationCode,
@@ -93,16 +98,30 @@ class TicketsService {
         }
 
         // Validar propiedad (solicitante o admin)
-        const isOwner = ticket.user.toString() === user.id;
+        const isOwner = ticket.user._id ? ticket.user._id.toString() === user.id : ticket.user.toString() === user.id;
         if (user.role !== 'admin' && !isOwner) {
             throw { statusCode: 403, message: 'No tienes permisos para cancelar este ticket' };
         }
 
         // Cancelar sin eliminar físicamente (libera cupo automáticamente)
-        return await ticketsRepository.update(ticketId, {
+        const updatedTicket = await ticketsRepository.update(ticketId, {
             status: 'cancelled',
             cancelledAt: new Date()
         });
+
+        // NUEVA NOTIFICACIÓN: Enviar correo de cancelación de forma asíncrona
+        try {
+            const userEmail = ticket.user.email || user.email;
+            const eventTitle = ticket.event.title || 'Evento';
+            await mailService.sendTicketCancellation(userEmail, {
+                reservationCode: ticket.reservationCode,
+                eventTitle
+            });
+        } catch (err) {
+            console.error('[Mail] Error al enviar email de cancelación:', err.message);
+        }
+
+        return updatedTicket;
     }
 }
 

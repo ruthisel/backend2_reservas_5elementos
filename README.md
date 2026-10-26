@@ -54,7 +54,22 @@ API RESTful desarrollada con Node.js y Express para la gestión integral de rese
 | `GET` | `/api/events/:eid/tickets` | Dueño del evento u `admin` | Lista las inscripciones activas de un evento específico. |
 | `PATCH` | `/api/tickets/:tid/cancel` | Dueño del ticket u `admin` | Cancela una inscripción y libera el cupo consumido automáticamente. |
 
----
+------
+Manejo Centralizado de Errores
+El sistema cuenta con un middleware global de errores (errorHandler) registrado al final de la cadena de Express. Captura las excepciones lanzadas por los servicios y responde con la estructura estandarizada y el código HTTP adecuado:
+
+400 Bad Request: Parámetros de entrada inválidos, cupos insuficientes o fechas vencidas.
+
+401 Unauthorized: Token de autenticación ausente, expirado o inválido.
+
+403 Forbidden: Intento de acceso a un recurso sin los permisos de rol correspondientes.
+
+404 Not Found: Evento, ticket o usuario inexistente.
+
+409 Conflict: Registro o inscripción duplicada.
+
+500 Internal Server Error: Errores no controlados en tiempo de ejecución.
+------
 
 ## Ejemplo de Respuestas JSON
 
